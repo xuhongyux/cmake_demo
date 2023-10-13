@@ -4,6 +4,12 @@
 
 #include "../include/OpencvConverter.h"
 
+/**
+ * 提取帧
+ * @param videoPath
+ * @param exportPath
+ * @param framesPerSecond
+ */
 void extractFrames(const std::string &videoPath, const std::string &exportPath, int framesPerSecond) {
     VideoCapture video(videoPath);
 
@@ -42,41 +48,172 @@ void extractFrames(const std::string &videoPath, const std::string &exportPath, 
     std::cout << "已成功保存图像帧！" << std::endl;
 }
 
-
-void calculateTheMapBlue(const std::string &videoPath) {
-    // 1. 读取图片
-    cv::Mat src = cv::imread("path/to/your/image.jpg");
-    if (src.empty()) {
+std::pair<int, int> calculateBoosSite(const std::string &videoPath, const MapStateInfo &mapInfo) {
+    // 裁剪
+    cv::Mat sourceMat = roiImage(videoPath, mapInfo);
+    if (sourceMat.empty()) {
         std::cout << "Error loading image" << std::endl;
-        return ;
+        return std::make_pair(0, 0);
     }
 
-    // 2. 转换颜色空间到 HSV
+    // 2. 将图片从BGR空间转换到HSV空间
     cv::Mat hsv;
-    cv::cvtColor(src, hsv, cv::COLOR_BGR2HSV);
+    cv::cvtColor(sourceMat, hsv, cv::COLOR_BGR2HSV);
 
-    // 3. 对蓝色进行阈值处理
+    // 3. 设定红色区域的HSV范围
+    cv::Scalar lower_red(0, 120, 70);
+    cv::Scalar upper_red(10, 255, 255);
+    cv::Scalar lower_red2(170, 120, 70);
+    cv::Scalar upper_red2(180, 255, 255);
+
+    // 4. 对HSV图片进行阈值处理，得到红色区域的掩码
+    cv::Mat mask1, mask2;
+    cv::inRange(hsv, lower_red, upper_red, mask1);
+    cv::inRange(hsv, lower_red2, upper_red2, mask2);
+    cv::Mat mask = mask1 | mask2;
+
+    // 5. 寻找轮廓
+    std::vector<std::vector<cv::Point>> contours;
+    std::vector<cv::Vec4i> hierarchy;
+    cv::findContours(mask, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+
+    return calculateRoleSiteIndex(calculateMaxProfile(contours),mapInfo);
+}
+
+cv::Mat roiImage(const std::string &videoPath, const MapStateInfo &mapInfo) {
+    cv::Mat sourceMat;
+
+    // 1. 读取图片
+    cv::Mat src = cv::imread(videoPath);
+    if (src.empty()) {
+        return sourceMat;
+    }
+    // 2. 创建ROI
+    cv::Rect roi(
+            mapInfo.start_x_point,
+            mapInfo.start_y_point,
+            mapInfo.cell_size * mapInfo.check_row,
+            mapInfo.cell_size * mapInfo.check_col);
+    return src(roi);
+}
+
+std::pair<int, int> calculateMaxProfile(std::vector<vector<Point>> &contours) {
+    if (contours.empty()) {
+        return std::make_pair(0, 0);
+    }
+    // 找到面积最大的轮廓
+    int largestContourIndex = 0;
+    double largestContourArea = 0;
+    for (size_t i = 0; i < contours.size(); i++) {
+        double area = contourArea(contours[i]);
+        if (area > largestContourArea) {
+            largestContourArea = area;
+            largestContourIndex = i;
+        }
+    }
+    // 计算面积最大轮廓的中心点
+    Moments m = moments(contours[largestContourIndex]);
+    return std::make_pair(int(m.m10 / m.m00), int(m.m01 / m.m00));
+};
+
+/**
+ * 计算小人轮廓的索引
+ * @param site
+ * @param mapInfo
+ * @return
+ */
+std::pair<int, int> calculateRoleSiteIndex(std::pair<int, int> site,const MapStateInfo &mapInfo) {
+    int rowIndex = site.first / mapInfo.cell_size + 1;
+    int colIndex = site.second / mapInfo.cell_size + 1;
+    return std::make_pair(rowIndex, colIndex);
+}
+
+
+std::pair<int, int> calculateRoleSite(const std::string &videoPath, const MapStateInfo &mapInfo) {
+    // 裁剪
+    cv::Mat sourceMat = roiImage(videoPath, mapInfo);
+    if (sourceMat.empty()) {
+        std::cout << "Error loading image" << std::endl;
+        return std::make_pair(0, 0);
+    }
+    // 转换颜色空间到 HSV
+    cv::Mat hsv;
+    cv::cvtColor(sourceMat, hsv, cv::COLOR_BGR2HSV);
+
+    // 对蓝色进行阈值处理
     cv::Mat mask;
-    cv::inRange(hsv, cv::Scalar(100, 100, 100), cv::Scalar(130, 255, 255), mask);
+    cv::inRange(hsv, cv::Scalar(100, 80, 80), cv::Scalar(130, 255, 255), mask);
 
-    // 4. 查找轮廓
+    // 查找轮廓
     std::vector<std::vector<cv::Point>> contours;
     cv::findContours(mask, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
-    // 5. 遍历轮廓并找到中心点
-    for (const auto& contour : contours) {
-        cv::Moments m = cv::moments(contour);
-        int cx = int(m.m10 / m.m00);
-        int cy = int(m.m01 / m.m00);
+    return calculateRoleSiteIndex(calculateMaxProfile(contours),mapInfo);
+}
 
-        // 6. 在原图上绘制中心点
-        cv::circle(src, cv::Point(cx, cy), 5, cv::Scalar(0, 0, 255), -1);
+void calculateTheMapColourRead(const std::string &videoPath) {
+    // 1. 读取图片
+    cv::Mat src = cv::imread(videoPath);
+    if (src.empty()) {
+        std::cout << "Error loading image" << std::endl;
+        return;
+    }
+    // 2. 将图片从BGR空间转换到HSV空间
+    cv::Mat hsv;
+    cv::cvtColor(src, hsv, cv::COLOR_BGR2HSV);
+
+    // 3. 设定红色区域的HSV范围
+    cv::Scalar lower_red(0, 120, 70);
+    cv::Scalar upper_red(10, 255, 255);
+    cv::Scalar lower_red2(170, 120, 70);
+    cv::Scalar upper_red2(180, 255, 255);
+
+    // 4. 对HSV图片进行阈值处理，得到红色区域的掩码
+    cv::Mat mask1, mask2;
+    cv::inRange(hsv, lower_red, upper_red, mask1);
+    cv::inRange(hsv, lower_red2, upper_red2, mask2);
+    cv::Mat mask = mask1 | mask2;
+
+    //cv::imshow("mask", mask);
+
+
+    // 7. 寻找轮廓
+    std::vector<std::vector<cv::Point>> contours;
+    std::vector<cv::Vec4i> hierarchy;
+    cv::findContours(mask, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+
+    // 8. 寻找最大轮廓
+    int largestContourIndex = -1;
+    double maxArea = 0;
+    for (size_t i = 0; i < contours.size(); i++) {
+        double area = cv::contourArea(contours[i]);
+        if (area > maxArea) {
+            maxArea = area;
+            largestContourIndex = i;
+        }
     }
 
+    // 9. 计算最大轮廓的几何中心
+    cv::Point2f center;
+    if (largestContourIndex != -1) {
+        cv::Moments moments = cv::moments(contours[largestContourIndex]);
+        center = cv::Point2f(moments.m10 / moments.m00, moments.m01 / moments.m00);
+    } else {
+        std::cout << "No red region found" << std::endl;
+        return;
+    }
+
+    // 10. 输出中心坐标
+    std::cout << "Center of red region: (" << center.x << ", " << center.y << ")" << std::endl;
+
+
+
+    // cv::imshow("redRegion", redRegion);
     // 7. 显示结果
-    cv::imshow("Result", src);
+    //  cv::imshow("Original Image", src);
     cv::waitKey(0);
 }
+
 void calculateTheMap(const std::string &videoPath) {
     // 读取输入的图像文件
     if (videoPath.empty()) {

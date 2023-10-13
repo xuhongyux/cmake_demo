@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include "OpencvConverter.h"
+
 using namespace cv;
 
 
@@ -13,18 +14,25 @@ void hello() {
 void ImageThreshold(String str) {
     Mat image = imread(str);
 
-    imshow("test_opencv",image);
+    imshow("test_opencv", image);
     waitKey(1000);
 }
 
+extern const MapStateInfo STANDARD_11_9;
+
 
 int main() {
-//
-//    String path ="/Users/xiayu/Pictures/影视/《封神第一部：朝歌风云》2023【封神1080P超清国语HD 在线观看】由费翔、李雪健、黄渤、娜然、于适、陈牧驰、此沙、武亚凡、夏雨、袁泉、王洛勇、陈坤等主演；乌….mp4";
-//    String path1 ="/Users/xiayu/yolo资源/标准分辨1067_600.mp4";
-//    extractFrames(path1,"/Users/xiayu/yolo资源/dnfStandard_jgp/",2);
+
+    String testImage = "/Users/xiayu/yolo资源/dnfStandard_jgp/frame_1875.jpg";
 
 
-    calculateTheMap("/Users/xiayu/yolo资源/属性照片/地图属性.jpg");
+    std::pair<int, int> boos = calculateBoosSite(testImage, STANDARD_11_9);
+
+    std::cout << "boos site  " << boos.first <<"  |  "   << boos.second << std::endl;
+
+    std::pair<int, int> role = calculateRoleSite(testImage, STANDARD_11_9);
+
+    std::cout << "role site  " << role.first <<"  |  "   << role.second << std::endl;
+
     return 0;
 }
