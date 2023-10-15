@@ -6,6 +6,7 @@
 
 
 const float MAP_CELL_SIZE = 18.3;
+
 const MapStateInfo STANDARD_11_9 ={952,47,6,3,MAP_CELL_SIZE};
 
 

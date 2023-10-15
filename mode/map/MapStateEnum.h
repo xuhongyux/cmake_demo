@@ -23,4 +23,16 @@ extern const float MAP_CELL_SIZE;
 extern const MapStateInfo STANDARD_11_9;
 
 
+// 地图链表
+class MapNode {
+public:
+    std::pair<int, int> sitePair;
+
+    // 指向下一个节点的指针
+    MapNode* next;
+  //  MapNode( std::pair<int, int> &sitePair) : value(&sitePair), next(nullptr) {}
+};
+
+
+
 #endif //CMAKE_DEMO_MAPSTATEENUM_H

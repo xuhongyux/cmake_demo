@@ -12,7 +12,7 @@ find_package(OpenCV REQUIRED)
 find_package(Torch REQUIRED)
 
 # 添加可执行文件
-add_executable(cmake_demo Main.cpp util/OpencvConverter.cpp include/OpencvConverter.h mode/map/MapStateEnum.cpp mode/map/MapStateEnum.h)
+add_executable(cmake_demo Main.cpp util/OpencvConverter.cpp include/OpencvConverter.h mode/map/MapStateEnum.cpp mode/map/MapStateEnum.h mode/time/GlobalTimer.cpp mode/time/GlobalTimer.h mode/Common.h)
 
 
 # 引入.h文件
@@ -21,6 +21,11 @@ file(GLOB MODE_INCLUDE_DIRS "./mode/*")
 include_directories(${MODE_INCLUDE_DIRS})
 
 include_directories(./include)
+include_directories(./mode)
+
+
+# 引入.h文件 结束
+
 
 
 # 链接OpenCV库
