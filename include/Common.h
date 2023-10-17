@@ -5,7 +5,7 @@
 #ifndef CMAKE_DEMO_COMMON_H
 #define CMAKE_DEMO_COMMON_H
 
-#include "String"
+#include "string"
 #include <opencv2/opencv.hpp>
 
 

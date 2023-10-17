@@ -2,7 +2,7 @@
 // Created by 夏雨 on 2023/10/11.
 //
 
-#include "../include/OpencvConverter.h"
+#include "OpencvConverter.h"
 
 /**
  * 提取帧
