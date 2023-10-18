@@ -4,11 +4,9 @@
 
 #ifndef CMAKE_DEMO_GLOBALTIMER_H
 #define CMAKE_DEMO_GLOBALTIMER_H
-#include "Common.h"
 
-
-
-
+#include <iostream>
+#include "GlobalTimer.h"
 
 
 #endif //CMAKE_DEMO_GLOBALTIMER_H

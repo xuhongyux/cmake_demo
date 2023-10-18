@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 3.25)
 project(cmake_demo)
 
+
+# 指定c++的标准
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 11)
 
 # 设置OpenCV的路径
 set(Torch_DIR /Users/xiayu/context/libtorch/share/cmake/Torch)
@@ -11,35 +14,44 @@ set(OpenCV_DIR /Users/xiayu/context/opencv/build_opencv)
 find_package(OpenCV REQUIRED)
 find_package(Torch REQUIRED)
 
-# 指定c++的标准
-set(CMAKE_CXX_STANDARD 11)
+
+# 在根节点处理头文件
+include_directories(${PROJECT_SOURCE_DIR}/common)
+include_directories(${PROJECT_SOURCE_DIR}/map)
+include_directories(${PROJECT_SOURCE_DIR}/roleSite)
+include_directories(${PROJECT_SOURCE_DIR}/time)
+include_directories(${PROJECT_SOURCE_DIR}/yolov8)
 
 
-# 指定头文件路径
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-# 添加可执行文件
-file(GLOB_RECURSE SRC_LIST_CPP ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
+add_subdirectory(common)
+add_subdirectory(map)
+add_subdirectory(roleSite)
+add_subdirectory(time)
+add_subdirectory(yolov8)
 
+# 引入子目录的静态库
+link_libraries(common map roleSite time yolov8)
 
 # 制作可执行文件
+set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/bin)
+add_executable(cmake_demo Main.cpp roleSite/RoleSiteCalculation.cpp roleSite/RoleSiteCalculation.h yolov8/yoloV8Analysis.cpp yolov8/yoloV8Analysis.h)
 
-# 指定生成的路径(绝对路径)路径不存在,cmake会帮我们创建
-set(HOME /Users/idea_code/cpp/cmake_demo)
-set(EXECUTABLE_OUTPUT_PATH ${HOME}/bin)
 
-add_executable(cmake_demo ${SRC_LIST_CPP})
 
-# 制作库连接
+
+# 制作库连接 开始
+
+# 添加可执行文件
+#file(GLOB_RECURSE SRC_LIST_CPP ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
+
 
 # 指定库文件的路径
-set(LIBRARY_OUTPUT_PATH ${HOME}/bin)
+# set(LIBRARY_OUTPUT_PATH ${EXECUTABLE_OUTPUT_PATH})
 
 ## STATIC 静态库
 ## SHARED 动态
 #add_library(cmake_demo STATIC ${SRC_LIST_CPP})
 
+# 制作库连接 结束
 
-
-# 链接OpenCV库
-target_link_libraries(cmake_demo ${OpenCV_LIBS})

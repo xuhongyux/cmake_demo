@@ -1,9 +1,10 @@
-#include "Main.h"
 
 #include <iostream>
-#include "OpencvConverter.h"
+#include "common/OpencvConverter.h"
 
 using namespace cv;
+
+extern const MapStateInfo STANDARD_11_9;
 
 
 void hello() {
@@ -11,20 +12,14 @@ void hello() {
 }
 
 
-void ImageThreshold(String str) {
+void imageShow(String str) {
     Mat image = imread(str);
-
     imshow("test_opencv", image);
     waitKey(1000);
 }
 
-extern const MapStateInfo STANDARD_11_9;
-
-
-int main() {
-
+void calculateRoleSite(){
     String testImage = "/Users/xiayu/yolo资源/dnfStandard_jgp/frame_1875.jpg";
-
 
     std::pair<int, int> boos = calculateBoosSite(testImage, STANDARD_11_9);
 
@@ -33,6 +28,12 @@ int main() {
     std::pair<int, int> role = calculateRoleSite(testImage, STANDARD_11_9);
 
     std::cout << "role site  " << role.first <<"  |  "   << role.second << std::endl;
+}
+
+
+
+int main() {
+
 
     return 0;
 }
